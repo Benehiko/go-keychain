@@ -57,7 +57,6 @@ func testKeyring(t *testing.T, mode AuthenticationMode) {
 
 	err = srv.LockItems([]dbus.ObjectPath{collection})
 	require.NoError(t, err)
-
 }
 
 func TestGetAll(t *testing.T) {

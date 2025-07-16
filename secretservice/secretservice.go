@@ -31,7 +31,11 @@ const AuthenticationDHAES AuthenticationMode = "dh-ietf1024-sha256-aes128-cbc-pk
 const NilFlags = 0
 
 // Attributes
+// deprecated use [AttributesAny] instead.
 type Attributes map[string]string
+
+// AttributesAny
+type AttributesAny map[string]any
 
 // Secret
 type Secret struct {
@@ -187,7 +191,19 @@ func (s *SecretService) CloseSession(session *Session) {
 }
 
 // SearchCollection
+// deprecated use [SearchCollectionAny] instead.
 func (s *SecretService) SearchCollection(collection dbus.ObjectPath, attributes Attributes) (items []dbus.ObjectPath, err error) {
+	err = s.Obj(collection).
+		Call("org.freedesktop.Secret.Collection.SearchItems", NilFlags, attributes).
+		Store(&items)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search collection: %w", err)
+	}
+	return items, nil
+}
+
+// SearchCollectionAny
+func (s *SecretService) SearchCollectionAny(collection dbus.ObjectPath, attributes AttributesAny) (items []dbus.ObjectPath, err error) {
 	err = s.Obj(collection).
 		Call("org.freedesktop.Secret.Collection.SearchItems", NilFlags, attributes).
 		Store(&items)
@@ -249,6 +265,7 @@ func (s *SecretService) DeleteItem(item dbus.ObjectPath) (err error) {
 }
 
 // GetAttributes
+// deprecated use [GetAttributesAny] instead
 func (s *SecretService) GetAttributes(item dbus.ObjectPath) (attributes Attributes, err error) {
 	attributesV, err := s.Obj(item).GetProperty("org.freedesktop.Secret.Item.Attributes")
 	if err != nil {
@@ -259,6 +276,19 @@ func (s *SecretService) GetAttributes(item dbus.ObjectPath) (attributes Attribut
 		return nil, errors.New("failed to coerce item attributes")
 	}
 	return Attributes(attributesMap), nil
+}
+
+// GetAttributesAny
+func (s *SecretService) GetAttributesAny(item dbus.ObjectPath) (attributes AttributesAny, err error) {
+	attributesV, err := s.Obj(item).GetProperty("org.freedesktop.Secret.Item.Attributes")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get attributes: %w", err)
+	}
+	attributesMap, ok := attributesV.Value().(map[string]any)
+	if !ok {
+		return nil, errors.New("failed to coerce item attributes")
+	}
+	return AttributesAny(attributesMap), nil
 }
 
 // GetSecret
@@ -376,7 +406,15 @@ func (s *SecretService) PromptAndWait(prompt dbus.ObjectPath) (paths *dbus.Varia
 }
 
 // NewSecretProperties
+// deprecated use [NewSecretPropertiesAny] instead
 func NewSecretProperties(label string, attributes map[string]string) map[string]dbus.Variant {
+	return map[string]dbus.Variant{
+		"org.freedesktop.Secret.Item.Label":      dbus.MakeVariant(label),
+		"org.freedesktop.Secret.Item.Attributes": dbus.MakeVariant(attributes),
+	}
+}
+
+func NewSecretPropertiesAny(label string, attributes map[string]any) map[string]dbus.Variant {
 	return map[string]dbus.Variant{
 		"org.freedesktop.Secret.Item.Label":      dbus.MakeVariant(label),
 		"org.freedesktop.Secret.Item.Attributes": dbus.MakeVariant(attributes),
