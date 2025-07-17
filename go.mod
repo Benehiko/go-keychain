@@ -1,6 +1,6 @@
-module github.com/keybase/go-keychain
+module github.com/Benehiko/go-keychain/v2
 
-go 1.21
+go 1.24
 
 require (
 	github.com/keybase/dbus v0.0.0-20220506165403-5aa21ea2c23a
